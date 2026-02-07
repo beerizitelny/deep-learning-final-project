@@ -28,13 +28,13 @@ def process_and_save_model_io(args, data, model, tokenizer, device, model_name, 
 
         with torch.no_grad():
             model_output = generate(model_input, model, model_name, do_sample, max_new_tokens=max_new_tokens,
-                                    top_p=top_p, temperature=temperature, stop_token_id=stop_token_id, tokenizer=tokenizer, output_hidden_states=True)
+                                    top_p=top_p, temperature=temperature, stop_token_id=stop_token_id, tokenizer=tokenizer, output_hidden_states=True, use_dola=True)
 
         answer = tokenizer.decode(model_output['sequences'][0][len(model_input[0]):])
 
         if output_LOS:
             logger.info(f"Computing canonized_logits for index {index}")
-            canonized_logits = extract_scores(model_output=model_output, model_input=model_input, take_top_k=args.take_top_k)
+            canonized_logits = extract_scores(model_output=model_output, model_input=model_input, take_top_k=args.take_top_k, use_dola=True)
             logger.info(f"Canonized logits shape is {canonized_logits.shape}")
 
 
