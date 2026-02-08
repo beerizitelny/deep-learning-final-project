@@ -47,6 +47,11 @@ def process_and_save_model_io(args, data, model, tokenizer, device, model_name, 
         
         save_raw_data(LLM=args.LLM, dataset_name=args.dataset, base_dir=args.base_raw_data_dir, probs_output=canonized_logits, idx=index, label=correctness)
 
+        # cleaning GPU between runs
+        del model_output
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
 
         end_time = time.time()
         delta_time = end_time - start_time
