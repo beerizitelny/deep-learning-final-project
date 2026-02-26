@@ -9,22 +9,27 @@
 source ~/miniforge3/etc/profile.d/conda.sh
 conda activate LOS_Net
 
-# ./scripts/generate_HD_raw_datasets.sh /home/beerizitelny/deep-learning-final-project/big-storage/raw_data 5
+for DATASET in imdb imdb_test movies movies_test; do
+  echo "Processing dataset: $DATASET"
 
-# python create_HD_datasets.py \
-#  --dataset imdb \
-#  --LLM mistralai/Mistral-7B-Instruct-v0.2 \
-#  --base_raw_data_dir /home/beerizitelny/deep-learning-final-project/big-storage/raw_data \
-#  --n_samples 10_000 \
-#  --chunk 1
+  for CHUNK_ID in {1..3}; do
+    echo "Running chunk $CHUNK_ID for dataset $DATASET"
 
-for CHUNK_ID in {1..10}; do
-  echo "Running chunk $CHUNK_ID"
+    python create_HD_datasets.py \
+      --dataset "$DATASET" \
+      --LLM mistralai/Mistral-7B-Instruct-v0.2 \
+      --base_raw_data_dir /home/beerizitelny/deep-learning-final-project/big-storage/test \
+      --n_samples 10000 \
+      --chunk "$CHUNK_ID"
+  done
 
-  python create_HD_datasets.py \
-    --dataset imdb \
+  python preprocess_datasets.py \
     --LLM mistralai/Mistral-7B-Instruct-v0.2 \
+    --dataset "$DATASET" \
+    --topk_preprocess 1_000 \
     --base_raw_data_dir /home/beerizitelny/deep-learning-final-project/big-storage/raw_data \
-    --n_samples 10000 \
-    --chunk "$CHUNK_ID"
+    --base_pre_processed_data_dir /home/beerizitelny/LOS-Net/pre_processed_data \
+    --input_output_type output \
+    --N_max 50 \
+    --input_type LOS
 done

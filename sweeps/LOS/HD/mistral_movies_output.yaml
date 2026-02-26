@@ -22,7 +22,7 @@ parameters:
   num_epochs:
     values: [300]
   batch_size:
-    values: [8]          # safe for Mistral-7B
+    values: [8]
   patience:
     values: [30]
 
@@ -32,7 +32,7 @@ parameters:
   probe_model:
     values: ["LOS-Net"]
   hidden_dim:
-    values: [128]
+    values: [128, 256]
   num_layers:
     values: [1]
   heads:
@@ -89,7 +89,7 @@ parameters:
   best_model_path:
     values: ["saved_models"]
   base_pre_processed_data_dir:
-    values: ["/home/beerizitelny/LOS-Net/small_scale"]
+    values: ["/home/beerizitelny/LOS-Net/pre_processed_data"]
 
   # ======================
   # LLM

@@ -6,11 +6,11 @@
 
 program: ./main.py 
 
-method: grid  # Using grid search to exhaustively find the best hyperparameters
+method: grid
 
 metric:
-  name: best_val_AUC  # Using validation AUC to evaluate performance
-  goal: maximize  # We want to maximize the validation AUC
+  name: best_val_AUC
+  goal: maximize
 
 parameters:
   # Training settings
@@ -74,7 +74,7 @@ parameters:
   best_model_path:
     values: ["saved_models"]
   base_pre_processed_data_dir:
-    values: ["/home/beerizitelny/LOS-Net/small_scale"]
+    values: ["/home/beerizitelny/LOS-Net/pre_processed_data"]
 
   # Model type
   LLM:
