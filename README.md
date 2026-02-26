@@ -103,9 +103,11 @@ To reproduce the experiments from the paper, run the commands below:
 
 In order to test all approaches you need to edit the running files:
 1. **DOLA**
+Note that in order to test the DOLA approach you need to generate different data using DOLA.
 under "create_HD_dataset.py" update USE_DOLA = True and run the batch file.
 make sure to use different base_dir so you won't override code-base generated-data.
 After DOLA data is generated, you can run the experiment as written. 
 2. **gradient clipping**
+NOTE that in order to test the gradient clipping approach you need to run the model with the clipping code.
 under "main.py" update GRAD_CLIP = 1.0 .
 if the (regular) data is already generated, you can run the experiment as written.
