@@ -5,7 +5,7 @@ from utils.LLM_helpers import load_model_and_validate_gpu
 from utils.args import parse_args_HD
 from utils.datasets_HD_helper import *
 from utils.generation_utils import *
-USE_DOLA = FALSE
+USE_DOLA = False
 
 def process_and_save_model_io(args, data, model, tokenizer, device, model_name, wrong_labels, labels, do_sample=False, output_LOS=True,
                            temperature=1.0,
@@ -130,4 +130,3 @@ def main():
 
 if __name__ == "__main__":
     main()
->>>>>>> DOLA
