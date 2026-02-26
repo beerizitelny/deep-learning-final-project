@@ -13,8 +13,8 @@ from utils.Architectures import get_model
 from transformers import get_scheduler
 import time
 
-# Gradient clipping: max norm for clip_grad_norm_. Set to 0 to disable.
-GRAD_CLIP = 1.0
+# Gradient clipping: max norm for clip_grad_norm_. Set to 0 to disable, set 1.0 for test
+GRAD_CLIP = 0.0
 
 
 def get_train_test_datasets(args, logger):
