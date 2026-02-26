@@ -1,4 +1,3 @@
-
 import torch
 from utils.logger import get_logger
 from transformers import set_seed
@@ -6,7 +5,7 @@ from utils.LLM_helpers import load_model_and_validate_gpu
 from utils.args import parse_args_HD
 from utils.datasets_HD_helper import *
 from utils.generation_utils import *
-
+USE_DOLA = FALSE
 
 def process_and_save_model_io(args, data, model, tokenizer, device, model_name, wrong_labels, labels, do_sample=False, output_LOS=True,
                            temperature=1.0,
@@ -28,13 +27,13 @@ def process_and_save_model_io(args, data, model, tokenizer, device, model_name, 
 
         with torch.no_grad():
             model_output = generate(model_input, model, model_name, do_sample, max_new_tokens=max_new_tokens,
-                                    top_p=top_p, temperature=temperature, stop_token_id=stop_token_id, tokenizer=tokenizer, output_hidden_states=True)
+                                    top_p=top_p, temperature=temperature, stop_token_id=stop_token_id, tokenizer=tokenizer, output_hidden_states=True, use_dola=USE_DOLA)
 
         answer = tokenizer.decode(model_output['sequences'][0][len(model_input[0]):])
 
         if output_LOS:
             logger.info(f"Computing canonized_logits for index {index}")
-            canonized_logits = extract_scores(model_output=model_output, model_input=model_input, take_top_k=args.take_top_k)
+            canonized_logits = extract_scores(model_output=model_output, model_input=model_input, take_top_k=args.take_top_k, use_dola=USE_DOLA)
             logger.info(f"Canonized logits shape is {canonized_logits.shape}")
 
 
@@ -47,11 +46,6 @@ def process_and_save_model_io(args, data, model, tokenizer, device, model_name, 
         
         save_raw_data(LLM=args.LLM, dataset_name=args.dataset, base_dir=args.base_raw_data_dir, probs_output=canonized_logits, idx=index, label=correctness)
 
-        # cleaning GPU between runs
-        del model_output
-        import gc
-        gc.collect()
-        torch.cuda.empty_cache()
 
         end_time = time.time()
         delta_time = end_time - start_time
@@ -136,3 +130,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+>>>>>>> DOLA

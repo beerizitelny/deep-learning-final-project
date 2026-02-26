@@ -10,7 +10,7 @@ from utils.logits_handler import *
 from utils.file_io import save_raw_data
 
 
-
+'''
 def extract_scores(model_output, model_input, take_top_k=1000000):
     raw_logits = torch.concatenate(model_output['scores']).cpu()  # shape = (new_tokens, len(vocab))
 
@@ -20,25 +20,86 @@ def extract_scores(model_output, model_input, take_top_k=1000000):
 
 
     return canonized_logits
+'''
+
+def extract_scores(model_output, model_input, take_top_k=1000000, use_dola=False):
+    # only when using DOLA improvment
+    if use_dola:
+        raw_logits = torch.cat(model_output['logits'], dim=1).squeeze(0).cpu()
+    else:
+        raw_logits = torch.concatenate(model_output['scores']).cpu() 
+    output_ids = model_output['sequences'][0][len(model_input[0]):].cpu()
+
+    canonized_logits = compute_logprobs_with_selection_and_ranks(
+        input_ids=output_ids.unsqueeze(0), 
+        raw_logits=raw_logits.unsqueeze(0), 
+        take_top_k=take_top_k, 
+        HD=True
+    )
+
+    return canonized_logits
 
 def generate(model_input, model, model_name, do_sample=False, temperature=1.0, top_k=50, top_p=1.0,
-             max_new_tokens=100, stop_token_id=None, tokenizer=None, output_hidden_states=False, additional_kwargs=None):
+             max_new_tokens=100, stop_token_id=None, tokenizer=None, output_hidden_states=False, use_dola=False, premature_layer_idx=16, additional_kwargs=None):
+    # original generate function
+    if not use_dola:
+        if stop_token_id is not None:
+            eos_token_id = stop_token_id
+        else:
+            eos_token_id = None
 
-    if stop_token_id is not None:
-        eos_token_id = stop_token_id
+        model_output = model.generate(model_input,
+                                    max_new_tokens=max_new_tokens, output_hidden_states=output_hidden_states,
+                                    output_scores=True,
+                                    return_dict_in_generate=True, do_sample=do_sample,
+                                    temperature=temperature, top_k=top_k, top_p=top_p, eos_token_id=eos_token_id,
+                                    **(additional_kwargs or {}))
+
+        return model_output
+    
+    # using DOLA improvment
     else:
-        eos_token_id = None
+        generated = model_input
+        batch_size = model_input.shape[0]
+        finished = torch.zeros(batch_size, dtype=torch.bool, device=model_input.device)
+        
+        all_logits = []
 
-    model_output = model.generate(model_input,
-                                  max_new_tokens=max_new_tokens, output_hidden_states=output_hidden_states,
-                                  output_scores=True,
-                                  return_dict_in_generate=True, do_sample=do_sample,
-                                  temperature=temperature, top_k=top_k, top_p=top_p, eos_token_id=eos_token_id,
-                                  **(additional_kwargs or {}))
+        for _ in range(max_new_tokens):
+            # forward pass through the model
+            outputs = model(generated, output_hidden_states=True, return_dict=True)
+            next_token_logits = outputs.logits[:, -1, :]
+            # token for the premature hidden layer logits
+            premature_hs = outputs.hidden_states[premature_layer_idx][:, -1, :]
+            
+            with torch.no_grad():
+                # normalized prob logits in word space (what the model would output if it had 16 layers)
+                premature_logits = model.lm_head(model.model.norm(premature_hs))
+            
+            dola_logits = next_token_logits - premature_logits
 
-    return model_output
+            all_logits.append(dola_logits.unsqueeze(1))
 
+            if not do_sample or temperature == 0:
+                next_token = torch.argmax(dola_logits, dim=-1).unsqueeze(-1)
+            else:
+                probs = F.softmax(dola_logits / temperature, dim=-1)
+                next_token = torch.multinomial(probs, num_samples=1)
+            
+            # append the next token to the generated sequence
+            generated = torch.cat((generated, next_token), dim=1)
 
+            if stop_token_id is not None:
+                finished = finished | (next_token.squeeze() == stop_token_id)
+            finished |= next_token.squeeze() == tokenizer.eos_token_id
+
+            if finished.all():
+                break
+
+        return {
+            'sequences': generated,
+            'logits': tuple(all_logits),
+        }
 
 def tokenize(prompt, tokenizer, model_name, tokenizer_args=None):
     if 'instruct' in model_name.lower():
