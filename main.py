@@ -13,6 +13,9 @@ from utils.Architectures import get_model
 from transformers import get_scheduler
 import time
 
+# Gradient clipping: max norm for clip_grad_norm_. Set to 0 to disable, set 1.0 for test
+GRAD_CLIP = 0.0
+
 
 def get_train_test_datasets(args, logger):
     """Preprocesses datasets and loads them based on the task type."""
@@ -114,7 +117,7 @@ def get_train_test_val_subsets(args, train_indices, val_indices, test_indices, f
     return train_data, val_data, test_data
 
 
-def train_one_epoch(model, dataloader, criterion, optimizer, scheduler, device, input_type='LOS'):
+def train_one_epoch(model, dataloader, criterion, optimizer, scheduler, device, input_type='LOS', grad_clip=0.0):
     """Trains the model for one epoch."""
     model.train()
     total_loss = 0
@@ -130,6 +133,8 @@ def train_one_epoch(model, dataloader, criterion, optimizer, scheduler, device, 
             raise ValueError("Invalid input type.")
         loss = criterion(predictions, labels.float())
         loss.backward()
+        if grad_clip > 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
         scheduler.step()
         
@@ -190,7 +195,7 @@ def train_model(logger, model, dataloader_train, dataloader_val, dataloader_test
         logger.info(f"Epoch {epoch+1}/{args.num_epochs}")
         
         # Training
-        train_loss, auc_train = train_one_epoch(model, dataloader_train, criterion, optimizer, scheduler, device, input_type=args.input_type)
+        train_loss, auc_train = train_one_epoch(model, dataloader_train, criterion, optimizer, scheduler, device, input_type=args.input_type, grad_clip=GRAD_CLIP)
         logger.info(f"Train Loss: {train_loss:.4f}, Train AUC: {auc_train:.4f}")
         
         # Validation
