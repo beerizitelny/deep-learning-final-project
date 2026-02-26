@@ -1,0 +1,27 @@
+# Python cache files
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+logs/
+
+# Saved models
+saved_models/
+
+# Big datasets
+big-storage/
+
+# Wandb folder
+wandb/
+
+# IDE settings
+.idea/
+
+# Logs
+hd_gen_logs/
+
+# Big data / archives
+mis_imdb.tar.gz
+
+run_*.slurm
