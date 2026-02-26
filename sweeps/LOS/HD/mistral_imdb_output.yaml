@@ -17,11 +17,11 @@ parameters:
   num_epochs:
     values: [300]
   batch_size:
-    values: [64]
+    values: [8]
   patience:
     values: [30]
   seed:
-    values: [0, 1, 2]
+    values: [0]
 
   # Model architecture
   probe_model:
@@ -29,7 +29,7 @@ parameters:
   hidden_dim:
     values: [128, 256]
   num_layers:
-    values: [1, 2]
+    values: [1]
   heads:
     values: [8]
   dropout:
@@ -41,7 +41,7 @@ parameters:
   lr:
     values: [1e-4]
   weight_decay:
-    values: [0, 0.001, 0.005]
+    values: [0, 0.001]
 
 
   # Dataset and input settings
@@ -54,13 +54,13 @@ parameters:
   input_output_type:
     values: ["output"]
   topk_preprocess:
-    values: [1_000]
+    values: [1000]
   topk_dim:
-    values: [1_000]
+    values: [1000]
   rank_encoding:
     values: ["scale_encoding"]
   num_workers:
-    values: [4]
+    values: [2]
   pin_memory:
     values: [1]
 
@@ -74,7 +74,7 @@ parameters:
   best_model_path:
     values: ["saved_models"]
   base_pre_processed_data_dir:
-    values: ['/home/guy_b/LOS-Net/pre_processed_data']
+    values: ["/home/beerizitelny/LOS-Net/small_scale"]
 
   # Model type
   LLM:

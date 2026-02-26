@@ -1,0 +1,14 @@
+# Python cache files
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+logs/
+
+# Saved models
+saved_models/
+
+# Big datasets
+big-storage/
+
